@@ -517,11 +517,11 @@ export default {
         })
         .on("mouseover", (event,d)=>{
             d3.selectAll("#"+d.data.name)
-              .style("stroke", "#fbb81b")
+              .style("stroke", "#DB1F48")
         })
         .on("mouseout", (event,d)=>{
             d3.selectAll("#"+d.data.name)
-            .style("stroke", "#528c41")
+            .style("stroke", "#0C1446")
         })
         this.childScatter = d3.selectAll(".inboxCircle.presentCircle, .outofBoxCircle.presentCircle")
         this.svgBrush = this.miniMap.append("g");
@@ -919,11 +919,11 @@ export default {
         })
         .on("mouseover", (event,d)=>{
             d3.selectAll("#"+d.data.name)
-              .style("stroke", "#fbb81b")
+              .style("stroke", "#DB1F48")
         })
         .on("mouseout", (event,d)=>{
             d3.selectAll("#"+d.data.name)
-            .style("stroke", "#528c41")
+            .style("stroke", "#0C1446")
         })
       this.childScatter = d3.selectAll(".inboxCircle.presentCircle, .outofBoxCircle.presentCircle")
       this.onZoom = (event) => {
@@ -1111,17 +1111,17 @@ circle {
   display: none;
 }
 .outofBox {
-  fill: #f2efe6;
+  fill: #E8EEF1;
   fill-opacity: 0.4;
-  stroke: #528c41;
+  stroke: #0C1446;
   /* stroke-width: 1px; */
   opacity: 1;
   display: block;
 }
 .inbox {
-  fill: #f2efe6;
+  fill: #E8EEF1;
   fill-opacity: 0.4;
-  stroke: #528c41;
+  stroke: #0C1446;
   /* stroke-width: 1px; */
   opacity: 1;
   display: block;
@@ -1164,7 +1164,7 @@ circle {
   display: block;
 }
 .overlay {
-  fill: orange;
+  fill: #87ACA3;
   pointer-events: none;
 }
 .selection {
@@ -1176,13 +1176,13 @@ circle {
 .appendCircle {
   fill: white;
   fill-opacity: 1;
-  stroke: #ff5555;
+  stroke: #DB1F48;
   /* stroke-width: 0.7px; */
   display: block;
   pointer-events: none;
 }
 .clickedImage {
-  fill: #ff5555;
+  fill: #DB1F48;
   fill-opacity: 1;
   stroke-width: 0px;
   opacity: 1;
