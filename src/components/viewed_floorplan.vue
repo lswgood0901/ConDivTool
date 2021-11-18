@@ -96,7 +96,6 @@ export default {
     select_highlighted(model) {
       console.log("hi highlighted", model);
       this.$emit("selected_floorplan_id", this.viewed_floorplan[model]);
-      this.$emit("entropy_flag", this.entropy_count++);
     },
     make_this_input(model) {
       this.$emit("make_this_input", this.viewed_floorplan[model]);

@@ -212,6 +212,7 @@
                 :removed_fp_id="removed_fp_id"
                 :viewed_to_selected_fp="selected_fp_id"
                 :make_this_input="make_this_input"
+                :loadingcount="loadingcount"
                 @id="
                   count = count + 1;
                   viewed_fp_id = $event;
@@ -234,14 +235,13 @@
           <viewedFloorplan
             :added="viewed_fp_id"
             @selected_floorplan_id="selected_fp_id = $event"
-            @entropy_flag="entropy_count++"
             @make_this_input="make_this_input = $event"
           />
           <selectedFloorplan 
             :added="selected_fp_id" 
             @removed_floorplan_id="removed_fp_id = $event"
-            @entropy_flag="entropy_count++"
             @make_this_input="make_this_input = $event"
+            @loadingcount="loadingcount++"
           />
         </v-row>
       </v-container>
@@ -284,7 +284,7 @@ export default {
       isLookDetailModePossible: false,
       isLookDetailMode: false,
       entropy_count:0,
-
+      loadingcount:0,
       clusterButton: 0,
       clusterFeatures: [1,1,1,1,1,1],
       number: true,

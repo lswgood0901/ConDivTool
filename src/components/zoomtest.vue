@@ -23,17 +23,16 @@ export default {
   props: {
     clusterFeatures: Array,
     backupCluster: Number,
-    entropy_count: Number,
     inCluster_condition: Boolean,
     removed_fp_id: String,
     viewed_to_selected_fp: String,
     make_this_input: String,
+    loadingcount: Number,
   },
   data() {
     return {
       g_screenoverlay: false,
       screenoverlay: false,
-      // allData: allData,
       svg: null,
       svgMap: null,
       svgmini: null,
@@ -204,6 +203,9 @@ export default {
   },
 
   watch: {
+    loadingcount() {
+      this.screenoverlay = true
+    },
     viewed_to_selected_fp() {
       if(!this.selected_fp_array.includes(this.viewed_to_selected_fp)){
         this.selected_fp_array.push(this.viewed_to_selected_fp);

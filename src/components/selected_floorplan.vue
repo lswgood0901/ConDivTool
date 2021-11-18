@@ -57,7 +57,6 @@
               class="rounded-lg ma-3"
               height="25"
               @click="
-              delete_designMove(selected_floorplan[model]); // send to server
               remove(model);
               "
             >
@@ -84,58 +83,41 @@ export default {
   data: () => ({
     model: null,
     selected_floorplan: [],
-    entropy_count: 0,
+    loadingcount: 0,
   }),
   watch: {
     added() {
-      let dup = false
-      if(this.selected_floorplan.includes(this.added)){
-        dup = true
-      }
-      if(!dup){
+      if(!this.selected_floorplan.includes(this.added)){
         this.selected_floorplan.push(this.added);
-        // this.add_to_designMoves(this.added)
-        console.log("selected_floorplan_name", this.added);
       }
       this.model = this.selected_floorplan.length-1;
     },
   },
   methods: {
-    remove(model) {
-      console.log("hi will deleted", model);
-      this.$emit("removed_floorplan_id", this.selected_floorplan[model]);
-      this.selected_floorplan.splice(model, 1);
-      this.$emit("entropy_flag", this.entropy_count++);
+     remove(model) {
+      this.$emit("loadingcount")
+      const delete_fp = this.selected_floorplan[model]
+      this.delete_designMove(this.selected_floorplan[model]).then(()=>{
+        this.$emit("removed_floorplan_id", delete_fp);
+        const newArray = this.selected_floorplan.filter(e => e !== delete_fp)
+        this.selected_floorplan = newArray
+      })
       model = null;
     },
-    add_to_designMoves: async (id) => {
-      console.log("in add_to_designMoves");
-      // eslint-disable-line no-unused-vars
-      const response = axios
-        .post("/add_to_designMoves", {
-          reference_name: id,
-        })
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      return response.data;
-    },
-    delete_designMove: async (id) => {
+    delete_designMove: async (id, x) => {
       console.log("delete_designMove")
       const response = axios
         .post("/delete_in_designMoves", {
           reference_name: id,
         })
-        .then((response) => {
-          console.log(response.data)
+        .then(function(response){
+          console.log("delete done",response.data)
         })
         .catch(function(error){
           console.log(error)
         })
-        return response.data
+        x = response
+        return x
     },
     make_this_input(model) {
       this.$emit("make_this_input", this.selected_floorplan[model]);
