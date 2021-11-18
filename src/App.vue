@@ -3,7 +3,7 @@
     <v-app-bar app color="primary" class="rounded-b-lg">
       <v-spacer></v-spacer>
       <div class="text-h4 font-weight-bold highlight--text">
-        Creative search
+        ConDiv Tool
       </div>
       <v-spacer>
       </v-spacer>
@@ -26,14 +26,14 @@
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn
-                color="green darken-1"
+                color="#0C1446"
                 text
                 @click="isInclusterCondition = false, isIncluster = false"
               >
                 Disagree
               </v-btn>
               <v-btn
-                color="green darken-1"
+                color="#0C1446"
                 text
                 @click="isInclusterCondition = true , isIncluster = false"
               >
@@ -174,7 +174,7 @@
           >
             <div id="minimap">
               <v-row no-gutters>
-                <v-col cols="8" class="text-h8 mt-2 font-weight-bold fontsize"> Previous cluster </v-col>
+                <v-col cols="8" class="text-h8 mt-2 font-weight-bold"> Previous cluster </v-col>
                 <v-col>
                   <v-btn
                     v-on:click="
