@@ -79,6 +79,7 @@ export default {
   name: "selectedFloorplan",
   props: {
     added: String,
+    count: Number,
   },
   data: () => ({
     model: null,
@@ -86,7 +87,7 @@ export default {
     loadingcount: 0,
   }),
   watch: {
-    added() {
+    count() {
       if(!this.selected_floorplan.includes(this.added)){
         this.selected_floorplan.push(this.added);
       }
@@ -107,8 +108,9 @@ export default {
     delete_designMove: async (id, x) => {
       console.log("delete_designMove")
       const response = axios
-        .post("/delete_in_designMoves", {
+        .post("/add_to_viewedFP_caadria", {
           reference_name: id,
+          signal: 2,
         })
         .then(function(response){
           console.log("delete done",response.data)

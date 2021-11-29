@@ -28,6 +28,8 @@ export default {
     viewed_to_selected_fp: String,
     make_this_input: String,
     loadingcount: Number,
+    remove_count: Number,
+    view_to_count: Number,
   },
   data() {
     return {
@@ -80,6 +82,7 @@ export default {
       lookDetail: false,
       selected_fp_array: [],
       viewed_fp_array: [],
+      clusterSignal:"initial", 
     };
   },
   methods: {
@@ -95,44 +98,11 @@ export default {
           console.log(error);
         });
     },
-    visualize_entropy: async (designNode, x) => {
-      console.log("in visualize_entropy");
-      // eslint-disable-line no-unused-vars
-      const response = axios
-        .post("/visualize_entropy", {
-          in_view: designNode,
-        })
-        .then((response) => {
-          console.log(response.data);
-          return response.data
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-        x = response
-      return x;
-    },
-    add_to_designMoves: async (id, eventsignal) => {
+    add_to_viewedFP_caadria: async (id, eventsignal,x) => {
       console.log("in add_to_designMoves");
       // eslint-disable-line no-unused-vars
       const response = axios
-        .post("/add_to_designMoves", {
-          reference_name: id,
-          signal: eventsignal
-        })
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      return response.data;
-    },
-    add_to_designMoves_caadria: async (id, eventsignal) => {
-      console.log("in add_to_designMoves");
-      // eslint-disable-line no-unused-vars
-      const response = axios
-        .post("/add_to_designMoves_caadria", {
+        .post("/add_to_viewedFP_caadria", {
             reference_name: id,
             signal: eventsignal
         })
@@ -142,7 +112,8 @@ export default {
         .catch(function (error) {
           console.log(error);
         });
-      return response.data;
+        x = response
+      return x
     },
     generate_cluster: async (design, clustering_option, universe, x) => {
       const response = axios
@@ -150,6 +121,7 @@ export default {
           input_design: design,
           clustering_option: clustering_option,
           universe: universe,
+          cluster_signal: x
         })
         .then(function (response) {
           console.log(response.data);
@@ -160,22 +132,6 @@ export default {
         });
       x = response;
       return x;
-    },
-    conduct_BIG: async (userAction, clusterinView, bdeJson) => {
-      // eslint-disable-line no-unused-vars
-      const response = axios
-        .post("/conduct_BIG", {
-          user_action: userAction,
-          clusters_in_view: clusterinView,
-        })
-        .then((response) => {
-          return response.data;
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      bdeJson = response;
-      return bdeJson;
     },
     isBrushed: (brushCoords, cx, cy) => {
       // eslint-disable-line no-unused-vars
@@ -203,40 +159,12 @@ export default {
   },
 
   watch: {
-    loadingcount() {
-      this.screenoverlay = true
-    },
-    viewed_to_selected_fp() {
-      if(!this.selected_fp_array.includes(this.viewed_to_selected_fp)){
-        this.selected_fp_array.push(this.viewed_to_selected_fp);
-        console.log(this.selected_fp_array)
-      }
+    selected_fp_array(){
       d3.selectAll(".clickedImage").remove()
       for(let i in this.selected_fp_array) {
         d3.selectAll("#image"+this.selected_fp_array[i])
           .attr("class", d=>{
-            this.gCam.append("circle")
-              .attr("cx", d.x)
-              .attr("cy", d.y)
-              .attr("r", d.r + 1)
-              .attr("class", "clickedImage")
-              .attr("id", "clickedImage"+this.selected_fp_array[i])
-              .lower()
-          })
-      }
-    },
-    viewed_fp_array(){
-        this.add_to_designMoves_caadria(this.viewed_fp_array[this.viewed_fp_array.length-1], this.eventsignal)
-    },
-    removed_fp_id() {
-      let idx = this.selected_fp_array.indexOf(this.removed_fp_id)
-      this.selected_fp_array.splice(idx,1)
-      console.log(this.selected_fp_array)
-      d3.selectAll(".clickedImage").remove()
-      for(let i in this.selected_fp_array) {
-        d3.selectAll("#image"+this.selected_fp_array[i])
-          .attr("class", d=>{
-            this.gCam.append("circle")
+            this.imggCam.append("circle")
               .attr("cx", d.x)
               .attr("cy", d.y)
               .attr("r", d.r + 1)
@@ -247,6 +175,7 @@ export default {
       }
     },
     inCluster_condition() {
+      console.log(this.inCluster_condition)
       if(this.inCluster_condition) {
         this.reCluster = this.reCluster + 1;
       }
@@ -292,6 +221,7 @@ export default {
     },
     reCluster() {
       console.log("B")
+      d3.selectAll(".input_cluster").classed("input_cluster", false)
       this.g_screenoverlay = true
       this.previousClusterFeatures = [...this.clusterFeatures]
       this.userAction = undefined;
@@ -301,7 +231,7 @@ export default {
       if(this.isIncluster && !this.isRecluster && !this.isBackup){
 
         d3.selectAll("#"+this.eventTarget.id).attr("id", (d)=>{
-          this.inClusterInputDesign = d.data.clusterRepresentPlans[2].name.slice(1)
+          this.inClusterInputDesign = d.data.clusterRepresentPlans[2].split(";")[0].slice(1)
           console.log(d)
           for(let i=0; i<d.children.length; i++){
             childUniverse.push(d.children[i].data.name.slice(1))
@@ -320,33 +250,42 @@ export default {
 
       //incluster universe
         if(this.isIncluster && !this.isRecluster && !this.isBackup) {
+          this.preserveClusterid = [...[this.clickedClusterId]]
+          this.clusterSignal = "in"
           this.reGenerateCluster = this.generate_cluster(
             this.inClusterInputDesign,
             [1,1,1,1,1,1],
-            childUniverse
+            childUniverse,
+            this.clusterSignal
           )
         } else if(this.isRecluster) {
           if(this.make_this_input !== null){
             this.input_design = this.make_this_input
           }
+          this.isBackup = false
+          this.clickedClusterId = null
           this.isRecluster = false
           this.isIncluster = false
           this.$emit("isIncluster", false)
+          this.clusterSignal="re"
           this.reGenerateCluster = this.generate_cluster(
             this.input_design,
             this.clusterFeatures,
-            this.universe
+            this.universe,
+            this.clusterSignal
           )
         } else if(this.isBackup) {
           this.isBackup = false
           this.isIncluster = false
+          this.clusterSignal ="back"
           console.log( this.input_design,
             this.previousClusterFeatures,
             this.universe)
           this.reGenerateCluster = this.generate_cluster(
             ...this.previousInputDesign,
             this.previousClusterFeatures,
-            this.universe
+            this.universe,
+            this.clusterSignal
           )
         }
 
@@ -394,77 +333,141 @@ export default {
           })
           .attr("class", (d) => {
             if (d.data.name[0] === "C") {
-              let meanWidth = (d.r-2) * Math.sqrt(2, 2)
-              let meanX = d.x - (d.r-2) * Math.sqrt(0.5, 2)
-              let meanY = d.y - (d.r-2) * Math.sqrt(0.5, 2)
-              let newRepresentArray = new Array
-              newRepresentArray = [...d.data.clusterRepresentPlans]
-              for(let step=0; step < d.data.clusterRepresentPlans.length; step++){
-                let dummyObject = new Object
-                dummyObject.name = newRepresentArray[step].name
-                dummyObject.value = 1
-                newRepresentArray.push(dummyObject)
-              }
+            let meanWidth = (d.r-2) * Math.sqrt(2, 2)
+            let meanX = d.x - (d.r-2) * Math.sqrt(0.5, 2)
+            let meanY = d.y - (d.r-2) * Math.sqrt(0.5, 2)
+            let newRepresentArray = new Array
 
-              this.gCam.append("g")
-                .selectAll("image")
-                .data(newRepresentArray)
-                .join("image")
-                .attr("x", (d,i)=>{
-                  if(i < newRepresentArray.length/2){
-                    return meanX
-                    } else {
-                      return meanX + meanWidth * 0.205 * (i-newRepresentArray.length/2)
-                    }
-                })
-                .attr("y", (d,i)=>{
-                  if(i < newRepresentArray.length/2){
-                    return meanY
-                    } else {
-                      return meanY + meanWidth* 0.82
-                    }
-                })
-                .attr("width", (d,i)=>{
-                  if(i < newRepresentArray.length/2){
-                    return meanWidth
-                    } else {
-                      return meanWidth * 0.18
-                    }
-                })
-                .attr("height", (d,i)=>{
-                  if(i < newRepresentArray.length/2){
-                    return meanWidth * 0.8
-                    } else {
-                      return meanWidth * 0.18
-                    }
-                })
-                .attr("xlink:href", (d,i) => {
-                  if(i < newRepresentArray.length/2){
-                    let imgX = this.bboxBox.find(
-                      (item) => item.split("/")[2].split(".")[0] == newRepresentArray[i].name.slice(1)
-                      );
-                      return imgX;
-                    } else {
-                      let imgX = this.imgBox.find(
-                      (item) => item.split("/")[2].split(".")[0] == newRepresentArray[i].name.slice(1)
-                      );
-                      return imgX
-                    }
-                  })
-                .attr("class", "clusterMeans")
-                .style("opacity", (d,i)=>{
-                  if(i < newRepresentArray.length/2){
-                    return 1/ (newRepresentArray.length/2)
+            let meanAspectX = new Array
+            let meanAspectY = new Array
+            for(let i in d.data.clusterRepresentPlans) {
+                meanAspectX[i] = d.data.clusterRepresentPlans[i].split(';')[1]
+                meanAspectY[i] = d.data.clusterRepresentPlans[i].split(';')[2]
+              }
+            const average = arr => arr.reduce((p, c) => p + c, 0)
+            const averageX = average(meanAspectX)
+            const averageY = average(meanAspectY)
+            const meanXY = averageX/averageY
+            console.log(meanXY)
+
+            
+            for(let i in d.data.clusterRepresentPlans) {
+              console.log(d.data.clusterRepresentPlans[i].split(';')[0])
+              let dummyObject = new Object
+              dummyObject.name = d.data.clusterRepresentPlans[i].split(';')[0]
+              dummyObject.value = 1
+              newRepresentArray.push(dummyObject)
+            }
+            
+            // newRepresentArray = [...d.data.clusterRepresentPlans]
+            for(let step=0; step < d.data.clusterRepresentPlans.length; step++){
+              let dummyObject = new Object
+              dummyObject.name = newRepresentArray[step].name
+              dummyObject.value = 1
+              newRepresentArray.push(dummyObject)
+            }
+            console.log(newRepresentArray)
+            this.gCam
+              .append("svg")
+              .selectAll("svg")
+              .data(newRepresentArray)
+              .join("svg")
+              .attr("viewBox", "0 0 600 600")
+              .attr("preserveAspectRatio", (d,i)=>{
+                if(i < newRepresentArray.length/2){
+                  return "none"
+                  }
+              })
+              .attr("x", (d,i)=>{
+                if(i < newRepresentArray.length/2){
+                  return meanX + meanWidth*0.1
+                  }
+              })
+              .attr("y", (d,i)=>{
+                if(i < newRepresentArray.length/2){
+                  return meanY
+                  }
+              })
+              .attr("width", (d,i)=>{
+                if(i < newRepresentArray.length/2){
+                  if(meanXY > 1){
+                    return meanWidth*0.8
                   } else {
-                    return 1
+                    return meanWidth*0.8 * (meanXY)
+                  }
+                  
+                  }
+              })
+              .attr("height", (d,i)=>{
+                if(i < newRepresentArray.length/2){
+                  if(meanXY > 1) {
+                    return meanWidth *0.8* (1/meanXY)
+                  } else {
+                    return meanWidth *0.8
+                  }
+                  
+                  }
+              })
+              .append("image")
+              .attr("xlink:href", (d,i) => {
+              if(i < newRepresentArray.length/2){
+                let imgX = this.bboxBox.find(
+                  (item) => item.split("/")[2].split(".")[0] == newRepresentArray[i].name.slice(1)
+                  );
+                  return imgX;
+                }
+              })
+              .attr("class", "clusterMeans")
+              .style("opacity", (d,i)=>{
+                if(i < newRepresentArray.length/2){
+                  return 1/ (newRepresentArray.length/2)
+                }
+              })
+
+            this.gCam.append("g")
+              .selectAll("image")
+              .data(newRepresentArray)
+              .join("image")
+              .attr("x", (d,i)=>{
+                if(i >= newRepresentArray.length/2){
+                    return meanX + meanWidth * 0.205 * (i-newRepresentArray.length/2)
+                  }
+              })
+              .attr("y", (d,i)=>{
+                if(i >= newRepresentArray.length/2){
+                    return meanY + meanWidth* 0.82
+               }
+              })
+              .attr("width", (d,i)=>{
+                if(i >= newRepresentArray.length/2){
+                    return meanWidth * 0.18
+               }
+              })
+              .attr("height", (d,i)=>{
+                if(i >= newRepresentArray.length/2){
+                    return meanWidth * 0.18
+                  }
+              })
+              .attr("xlink:href", (d,i) => {
+                if(i >= newRepresentArray.length/2){
+                    let imgX = this.imgBox.find(
+                    (item) => item.split("/")[2].split(".")[0] == newRepresentArray[i].name.slice(1)
+                    );
+                    return imgX
                   }
                 })
-              return "inbox presentCircle";
-            } else if (d.data.name == "ancestor") {
-              return "ancestor";
-            } else {
-              return "inboxCircle presentCircle";
-            }
+              .attr("class", "clusterMeans")
+              .style("opacity", (d,i)=>{
+                if(i >= newRepresentArray.length/2){
+                  return 1
+                }
+              })
+            return "inbox presentCircle";
+          } else if (d.data.name == "ancestor") {
+            return "ancestor";
+          } else {
+            return "inboxCircle presentCircle";
+          }
           });
         d3.selectAll("#ancestor").attr("class", "no");
         this.imggCam = this.gCam.append("g");
@@ -499,6 +502,7 @@ export default {
         this.scatter = d3.selectAll(".inbox.presentCircle, .outofBox.presentCircle")
           .on("click", (event) => {
           let inclusterThreshold = d3.selectAll("#"+event.target.id)._groups[0][0].__data__.children.length
+          this.eventTarget = event.target;
           if (
             d3.select(".inbox.presentCircle").attr("id") == event.target.id && inclusterThreshold > 100 && !event.defaultPrevented
           ) {
@@ -610,10 +614,12 @@ export default {
           if (this.mouseDateTime + 2000 < Date.now()) {
             console.log(event.target.id.slice(1), "장바구니로");
             this.newinput_design = event.target.id.slice(1)
-            this.$emit("id", event.target.id.slice(1));
-            if(!this.viewed_fp_array.includes(this.viewed_fp_array)){
+            
+            if(!this.selected_fp_array.includes(event.target.id.slice(1))){
                 this.viewed_fp_array.push(event.target.id.slice(1));
                 this.eventsignal = 0
+                this.$emit("id", event.target.id.slice(1));
+                this.$emit("eventsignal", this.eventsignal);
                 console.log(this.viewed_fp_array)
             }
           }
@@ -623,18 +629,39 @@ export default {
           if(!event.defaultPrevented) {
                 console.log(event.target.id.slice(1), "장바구니로");
                 this.newinput_design = event.target.id.slice(1)
-                this.$emit("id", event.target.id.slice(1));
-                this.$emit("selectId", event.target.id.slice(1))
+                
+                if(this.viewed_fp_array.includes(event.target.id.slice(1)) && !this.selected_fp_array.includes(event.target.id.slice(1))){
+                  this.eventsignal = 1
+                  this.$emit("id", event.target.id.slice(1));
+                  this.$emit("eventsignal", this.eventsignal);
+                }
                 if(!this.selected_fp_array.includes(event.target.id.slice(1))){
                   this.selected_fp_array.push(event.target.id.slice(1))
                 }
-                if(!this.viewed_fp_array.includes(this.viewed_fp_array)){
-                this.viewed_fp_array.push(event.target.id.slice(1));
-                this.eventsignal = 1
-                console.log(this.viewed_fp_array)
-            }
+                if(!this.viewed_fp_array.includes(event.target.id.slice(1))){
+                  this.viewed_fp_array.push(event.target.id.slice(1));
+                  this.eventsignal = 1
+                  this.$emit("id", event.target.id.slice(1));
+                  this.$emit("eventsignal", this.eventsignal);
+                  console.log(this.viewed_fp_array)
+                }
+                
           }
         });
+        d3.selectAll(".clickedImage").remove()
+        for(let i in this.selected_fp_array) {
+          d3.selectAll("#image"+this.selected_fp_array[i])
+            .attr("class", d=>{
+              this.imggCam.append("circle")
+                .attr("cx", d.x)
+                .attr("cy", d.y)
+                .attr("r", d.r + 1)
+                .attr("class", "clickedImage")
+                .attr("id", "clickedImage"+this.selected_fp_array[i])
+                .lower()
+
+            })
+        }
         this.svgMap.call(
           this.zooms.transform,
           d3.zoomIdentity.translate(0, 0).scale(1)
@@ -642,7 +669,17 @@ export default {
         this.bFlag = true;
         this.zoomFlag = true
         this.bdePrior = [];
-        this.g_screenoverlay = false
+        this
+        .g_screenoverlay = false
+        console.log(d3.selectAll("#i"+this.input_design)._groups[0].length)
+        if(d3.selectAll("#i"+this.input_design)._groups[0].length == 1) {
+          d3.selectAll("#i"+this.input_design)
+            .filter((d)=>{
+              console.log(d.parent.data.name)
+              d3.selectAll("#"+d.parent.data.name).classed("input_cluster", true)
+            })
+        }
+        
       });
     },
     backupCluster() {
@@ -684,7 +721,8 @@ export default {
     const generateCluster = this.generate_cluster(
       this.input_design,
       this.clusterFeatures,
-      this.universe
+      this.universe,
+      this.clusterSignal
     );
     generateCluster.then((value) => {
       this.imgData = new Object();
@@ -762,20 +800,41 @@ export default {
           return d.data.name;
         })
         .attr("class", (d) => {
-          let randomY = Math.random()*0.3 + 0.5
           if (d.data.name[0] === "C") {
             let meanWidth = (d.r-2) * Math.sqrt(2, 2)
             let meanX = d.x - (d.r-2) * Math.sqrt(0.5, 2)
             let meanY = d.y - (d.r-2) * Math.sqrt(0.5, 2)
             let newRepresentArray = new Array
-            newRepresentArray = [...d.data.clusterRepresentPlans]
+
+            let meanAspectX = new Array
+            let meanAspectY = new Array
+            for(let i in d.data.clusterRepresentPlans) {
+                meanAspectX[i] = d.data.clusterRepresentPlans[i].split(';')[1]
+                meanAspectY[i] = d.data.clusterRepresentPlans[i].split(';')[2]
+              }
+            const average = arr => arr.reduce((p, c) => p + c, 0)
+            const averageX = average(meanAspectX)
+            const averageY = average(meanAspectY)
+            const meanXY = averageX/averageY
+            console.log(meanXY)
+
+            
+            for(let i in d.data.clusterRepresentPlans) {
+              console.log(d.data.clusterRepresentPlans[i].split(';')[0])
+              let dummyObject = new Object
+              dummyObject.name = d.data.clusterRepresentPlans[i].split(';')[0]
+              dummyObject.value = 1
+              newRepresentArray.push(dummyObject)
+            }
+            
+            // newRepresentArray = [...d.data.clusterRepresentPlans]
             for(let step=0; step < d.data.clusterRepresentPlans.length; step++){
               let dummyObject = new Object
               dummyObject.name = newRepresentArray[step].name
               dummyObject.value = 1
               newRepresentArray.push(dummyObject)
             }
-
+            console.log(newRepresentArray)
             this.gCam
               .append("svg")
               .selectAll("svg")
@@ -789,7 +848,7 @@ export default {
               })
               .attr("x", (d,i)=>{
                 if(i < newRepresentArray.length/2){
-                  return meanX
+                  return meanX + meanWidth*0.1
                   }
               })
               .attr("y", (d,i)=>{
@@ -799,12 +858,22 @@ export default {
               })
               .attr("width", (d,i)=>{
                 if(i < newRepresentArray.length/2){
-                  return meanWidth
+                  if(meanXY > 1){
+                    return meanWidth*0.8
+                  } else {
+                    return meanWidth*0.8 * (meanXY)
+                  }
+                  
                   }
               })
               .attr("height", (d,i)=>{
                 if(i < newRepresentArray.length/2){
-                  return meanWidth * randomY
+                  if(meanXY > 1) {
+                    return meanWidth *0.8* (1/meanXY)
+                  } else {
+                    return meanWidth *0.8
+                  }
+                  
                   }
               })
               .append("image")
@@ -901,6 +970,7 @@ export default {
       this.scatter = d3.selectAll(".inbox.presentCircle, .outofBox.presentCircle")
         .on("click", (event) => {
           let inclusterThreshold = d3.selectAll("#"+event.target.id)._groups[0][0].__data__.children.length
+          this.eventTarget = event.target;
           if (
             d3.select(".inbox.presentCircle").attr("id") == event.target.id && inclusterThreshold > 100 && !event.defaultPrevented
           ) {
@@ -1068,11 +1138,11 @@ export default {
           d3.selectAll(".appendCircle").remove();
           if (this.mouseDateTime + 2000 < Date.now()) {
             this.newinput_design = event.target.id.slice(1)
-            console.log(event.target.id.slice(1), "장바구니로");
-            this.$emit("id", event.target.id.slice(1));
-            if(!this.viewed_fp_array.includes(this.viewed_fp_array)){
+            if(!this.selected_fp_array.includes(event.target.id.slice(1))){
                 this.viewed_fp_array.push(event.target.id.slice(1));
                 this.eventsignal = 0
+                this.$emit("id", event.target.id.slice(1));
+                this.$emit("eventsignal", this.eventsignal);
                 console.log(this.viewed_fp_array)
             }
           }
@@ -1081,17 +1151,22 @@ export default {
           this.userAction = 4
           if(!event.defaultPrevented){
                 this.newinput_design = event.target.id.slice(1)
-                console.log(event.target.id.slice(1), "장바구니로");
-                this.$emit("id", event.target.id.slice(1));
-                this.$emit("selectId", event.target.id.slice(1))
+                if(this.viewed_fp_array.includes(event.target.id.slice(1)) && !this.selected_fp_array.includes(event.target.id.slice(1))){
+                  this.eventsignal = 1
+                  this.$emit("id", event.target.id.slice(1));
+                  this.$emit("eventsignal", this.eventsignal);
+                }
                 if(!this.selected_fp_array.includes(event.target.id.slice(1))){
                   this.selected_fp_array.push(event.target.id.slice(1))
                 }
-                if(!this.viewed_fp_array.includes(this.viewed_fp_array)){
-                this.viewed_fp_array.push(event.target.id.slice(1));
-                this.eventsignal = 1
-                console.log(this.viewed_fp_array)
-            }
+                if(!this.viewed_fp_array.includes(event.target.id.slice(1))){
+                  this.viewed_fp_array.push(event.target.id.slice(1));
+                  this.eventsignal = 1
+                  this.$emit("id", event.target.id.slice(1));
+                  this.$emit("eventsignal", this.eventsignal);
+                  console.log(this.viewed_fp_array)
+                }
+                
           }
         });
       this.g_screenoverlay = false
@@ -1174,6 +1249,9 @@ circle {
 }
 .clusterMeans {
   pointer-events: none;
+}
+.input_cluster{
+  fill:#97a8b1 !important;
 }
 .appendCircle {
   fill: white;

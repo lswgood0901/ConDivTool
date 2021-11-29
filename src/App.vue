@@ -157,7 +157,8 @@
               </v-img>
             </v-container>
             <v-btn
-              v-on:click="clusterButton++"
+              v-on:click="clusterButton++
+                isInclusterCondition = false;"
               depressed
               color="accent"
               :elevation="2"
@@ -194,6 +195,25 @@
               </v-row>
             </div>
           </v-card>
+
+          <v-card 
+            :elevation="3"
+            class="pa-2 ma-2 rounded-xl"
+            :style="{ height: '132px' }">
+
+            <v-img
+                  v-bind:src="
+                    require('./assets/legend.png')
+                  "
+                  transition="scale-transition"
+                  class="shrink"
+                  contain
+                  height="130"
+                >
+            </v-img>
+
+          </v-card>
+
         </v-col>
 
         <v-col cols="10">
@@ -206,22 +226,17 @@
               <zoomtest
                 :clusterFeatures="clusterFeatures"
                 :backupCluster="backupCluster"
-                :inspection="isLookDetailMode"
-                :inCluster_condition= "isInclusterCondition"
-                :entropy_count="entropy_count"
-                :removed_fp_id="removed_fp_id"
-                :viewed_to_selected_fp="selected_fp_id"
+                :inCluster_condition="isInclusterCondition"
                 :make_this_input="make_this_input"
-                :loadingcount="loadingcount"
+                :view_to_count="view_to_count"
                 @id="
-                  count = count + 1;
+                  added_count++;
                   viewed_fp_id = $event;
                 "
-                @selectId="
-                  selected_fp_id = $event
-                "
+                @eventsignal="
+                  eventsignal = $event
+                  "
                 @isIncluster="isIncluster = $event"
-                @lookDetail="isLookDetailModePossible = $event"
               />
             </div>
           </v-card>
@@ -234,15 +249,11 @@
         <v-row>
           <viewedFloorplan
             :added="viewed_fp_id"
-            @selected_floorplan_id="selected_fp_id = $event"
+            :added_count="added_count"
+            :eventsignal="eventsignal"
             @make_this_input="make_this_input = $event"
           />
-          <selectedFloorplan 
-            :added="selected_fp_id" 
-            @removed_floorplan_id="removed_fp_id = $event"
-            @make_this_input="make_this_input = $event"
-            @loadingcount="loadingcount++"
-          />
+
         </v-row>
       </v-container>
     </v-bottom-navigation>
@@ -252,7 +263,6 @@
 <script>
 import zoomtest from "./components/zoomtest.vue";
 import viewedFloorplan from "./components/viewed_floorplan.vue";
-import selectedFloorplan from "./components/selected_floorplan.vue";
 import axios from "axios";
 
 axios.defaults.baseURL = "http://166.104.34.136:5000";
@@ -263,7 +273,6 @@ export default {
   components: {
     zoomtest,
     viewedFloorplan,
-    selectedFloorplan,
   },
   data() {
     return {
@@ -275,16 +284,15 @@ export default {
         "shape layout",
         "shape",
       ],
+      remove_count:0,
+      view_to_count:0,
       id: false,
-      count: null,
+      count: 0,
       viewed_fp_id: null,
       selected_fp_id: null,
       viewed_to_selected_fp: null,
       removed_fp_id: null,
-      isLookDetailModePossible: false,
-      isLookDetailMode: false,
       entropy_count:0,
-      loadingcount:0,
       clusterButton: 0,
       clusterFeatures: [1,1,1,1,1,1],
       number: true,
@@ -297,6 +305,8 @@ export default {
       isInclusterCondition: false,
       make_this_input: null,
       backupCluster: 0,
+      added_count: 0,
+      eventsignal:0,
 
       dialog: false,
 
@@ -336,36 +346,6 @@ export default {
       } else {
         return (x = 0);
       }
-    },
-    visualize_entropy: async () => {
-      console.log("in visualize_entropy");
-      // eslint-disable-line no-unused-vars
-      const response = axios
-        .post("/visualize_entropy", {
-          clusters_in_view: [],
-        })
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      return response.data;
-    },
-    add_to_designMoves: async () => {
-      console.log("in add_to_designMoves");
-      // eslint-disable-line no-unused-vars
-      const response = axios
-        .post("/add_to_designMoves", {
-          reference_name: "",
-        })
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      return response.data;
     },
   },
 };
