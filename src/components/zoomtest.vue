@@ -517,6 +517,13 @@ export default {
               "outofBox presentCircle"
             );
             d3.select(event.target).attr("class", "inbox presentCircle");
+            if(d3.selectAll("#i"+this.input_design)._groups[0].length == 1) {
+              d3.selectAll("#i"+this.input_design)
+                .filter((d)=>{
+                  console.log(d.parent.data.name)
+                  d3.selectAll("#"+d.parent.data.name).classed("input_cluster", true)
+                })
+            }
             this.eventTarget = event.target;
             this.clicki++
           }
